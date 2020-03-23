@@ -108,12 +108,13 @@ def add_word(inputfile):
 
 
 def pop_word():
-    memo = session.query(Memo).order_by(Memo.scheduled_at).first()
-    if memo:
+    now = datetime.now()
+    memos = session.query(Memo).filter(Memo.scheduled_at<=now)
+    for memo in memos:
         verbose(memo.id, memo.scheduled_at)
         word_id = memo.word_id
         word = session.query(Word).filter(Word.id==word_id).first()
-        echo('added {} days ago'.format(memo.interval))
+        echo('memo on {} days'.format(memo.interval))
         print(word.keyword)
         print(word.content)
         session.query(Memo).filter(Memo.id==memo.id).delete()
