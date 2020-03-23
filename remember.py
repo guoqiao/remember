@@ -45,7 +45,7 @@ else:
 
 
 def echo(*args, **kwargs):
-    print('[{}]'.format(APP_NAME))
+    print('[{}]'.format(APP_NAME), end='')
     print(*args, **kwargs)
 
 
@@ -113,7 +113,7 @@ def pop_word():
         verbose(memo.id, memo.scheduled_at)
         word_id = memo.word_id
         word = session.query(Word).filter(Word.id==word_id).first()
-        print('added {} days ago'.format(memo.interval))
+        echo('added {} days ago'.format(memo.interval))
         print(word.keyword)
         print(word.content)
         session.query(Memo).filter(Memo.id==memo.id).delete()
