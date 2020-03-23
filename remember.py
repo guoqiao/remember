@@ -14,9 +14,8 @@ from sqlalchemy.orm import relationship, sessionmaker
 APP_NAME = 'remember'
 HOME = getenv('HOME')
 CONFIG_HOME = '{}/.config/{}'.format(HOME, APP_NAME)
-DB_PATH = join(CONFIG_HOME, '{}.db'.format(APP_NAME))
-DB_URL = URL(drivername='sqlite', database=DB_PATH)
 makedirs(CONFIG_HOME, exist_ok=True)
+DB_PATH = join(CONFIG_HOME, '{}.db'.format(APP_NAME))
 
 
 def cli():
@@ -35,6 +34,11 @@ def cli():
     return parser.parse_args()
 
 
+def echo(*args, **kwargs):
+    print('[{}]'.format(APP_NAME), end='')
+    print(*args, **kwargs)
+
+
 args = cli()
 if args.verbose:
     def verbose(*args, **kwargs):
@@ -44,14 +48,7 @@ else:
         pass
 
 
-def echo(*args, **kwargs):
-    print('[{}]'.format(APP_NAME), end='')
-    print(*args, **kwargs)
-
-
 Base = declarative_base()
-engine = create_engine(DB_URL, echo=args.verbose)
-verbose(DB_URL)
 
 
 class Word(Base):
@@ -80,8 +77,11 @@ class Memo(Base):
         return self.word
 
 
-Base.metadata.create_all(bind=engine)
+DB_URL = URL(drivername='sqlite', database=DB_PATH)
+verbose(DB_URL)
+engine = create_engine(DB_URL, echo=args.verbose)
 
+Base.metadata.create_all(bind=engine)
 
 Session = sessionmaker()
 Session.configure(bind=engine)
