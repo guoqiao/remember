@@ -107,7 +107,8 @@ if args.add:
     session.commit()
 
 if args.pop:
-    memo = session.query(Memo).first()
+    memo = session.query(Memo).order_by(Memo.scheduled_at).first()
+    print(memo.id, memo.scheduled_at)
     word_id = memo.word_id
     word = session.query(Word).filter(Word.id==word_id).first()
     print(word.keyword, word.content)
