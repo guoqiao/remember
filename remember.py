@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import sys
-from os import getenv, makedirs
+from os import getenv, makedirs, linesep
 from os.path import join
 from datetime import datetime, timedelta
 
@@ -24,9 +24,11 @@ def cli():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Remember Words")
 
-    parser.add_argument("-a", "--add", action="store_true", help="add new word")
-    parser.add_argument("--keyword", help="lookup keyword")
-    parser.add_argument("--content", help="lookup content")
+    parser.add_argument(
+        '-i', '--input',
+        type=argparse.FileType('r'),
+        default=None,
+        help='add word from file, use - for stdin')
     parser.add_argument("-p", "--pop", action="store_true", help="pop up a memo")
     parser.add_argument("-v", "--verbose", action="store_true", help="be verbose")
 
@@ -40,6 +42,11 @@ if args.verbose:
 else:
     def verbose(*args, **kwargs):
         pass
+
+
+def echo(*args, **kwargs):
+    print('[{}]'.format(APP_NAME))
+    print(*args, **kwargs)
 
 
 Base = declarative_base()
@@ -66,10 +73,12 @@ class Memo(Base):
 
     id = Column(Integer, primary_key=True)
     word_id = Column(Integer, ForeignKey('word.id'))
+    interval = Column(Integer)
     scheduled_at = Column(DateTime)
 
     def __str__(self):
         return self.word
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -77,24 +86,43 @@ Base.metadata.create_all(bind=engine)
 Session = sessionmaker()
 Session.configure(bind=engine)
 session = Session()
-now = datetime.now()
-if args.add:
-    row = Word(keyword=args.keyword, content=args.content, created_at=now)
-    session.add(row)
+
+
+def add_word(inputfile):
+    text = inputfile.read()
+    keyword, content = text.split(linesep, maxsplit=1)
+    verbose('add word: {}'.format(keyword))
+    verbose('with content: {}'.format(content))
+    now = datetime.now()
+    word = Word(keyword=keyword, content=content, created_at=now)
+    session.add(word)
     session.commit()
-    word_id = row.id
-    for interval in [1, 3, 7, 30]:
+    word_id = word.id
+    for interval in [1, 3, 7, 30, 60]:
         when = now + timedelta(days=interval)
-        row = Memo(word_id=word_id, scheduled_at=when)
-        session.add(row)
+        memo = Memo(word_id=word_id, interval=interval, scheduled_at=when)
+        session.add(memo)
     session.commit()
-elif args.pop:
+    echo('word added: {}'.format(keyword))
+    return word
+
+
+def pop_word():
     memo = session.query(Memo).order_by(Memo.scheduled_at).first()
     if memo:
         verbose(memo.id, memo.scheduled_at)
         word_id = memo.word_id
         word = session.query(Word).filter(Word.id==word_id).first()
-        verbose(word.keyword, word.content)
+        print('added {} days ago'.format(memo.interval))
+        print(word.keyword)
+        print(word.content)
         session.query(Memo).filter(Memo.id==memo.id).delete()
         session.commit()
+
+
+if args.input:
+    add_word(args.input)
+elif args.pop:
+    pop_word()
+
 session.close()
