@@ -20,18 +20,22 @@ DB_URL = URL(drivername='sqlite', database=DB_PATH)
 
 makedirs(CONFIG_HOME, exist_ok=True)
 
-parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    description="Remember Words")
 
-parser.add_argument("-a", "--add", action="store_true", help="Add new word")
-parser.add_argument("--keyword", help="word keyword")
-parser.add_argument("--content", help="word content")
-parser.add_argument("-p", "--pop", action="store_true", help="Pop a word")
-parser.add_argument("-v", "--verbose", action="store_true", help="Be verbose")
+def cli():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Remember Words")
 
-args = parser.parse_args()
+    parser.add_argument("-a", "--add", action="store_true", help="add new word")
+    parser.add_argument("--keyword", help="lookup keyword")
+    parser.add_argument("--content", help="lookup content")
+    parser.add_argument("-p", "--pop", action="store_true", help="pop up a memo")
+    parser.add_argument("-v", "--verbose", action="store_true", help="be verbose")
 
+    return parser.parse_args()
+
+
+args = cli()
 VERBOSE = args.verbose
 
 if VERBOSE:
