@@ -114,7 +114,7 @@ def pop_word():
         verbose(memo.id, memo.scheduled_at)
         word_id = memo.word_id
         word = session.query(Word).filter(Word.id==word_id).first()
-        echo('memo on {} days'.format(memo.interval))
+        echo('memo on day {}'.format(memo.interval))
         print(word.keyword)
         print(word.content)
         session.query(Memo).filter(Memo.id==memo.id).delete()
